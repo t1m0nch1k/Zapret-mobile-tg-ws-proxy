@@ -82,3 +82,7 @@ fastlane/test_output/
 # Flowseal tg-ws-proxy (Python) — не вендорим; только Kotlin в app/.../ewenloy/tgws/
 # Если склонировали рядом для сравнения — не копировать внутрь этого репо.
 tg-ws-proxy/
+
+# Chaquopy / Python build leftovers
+__pycache__/
+*.pyc
