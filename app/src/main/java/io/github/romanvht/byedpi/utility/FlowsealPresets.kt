@@ -12,7 +12,7 @@ import io.github.romanvht.byedpi.data.Command
 object FlowsealPresets {
     private const val PREFS_KEY = "flowseal_presets_seeded"
     private const val ASSET_NAME = "flowseal_presets.list"
-    private const val ASSET_VERSION = 6
+    private const val ASSET_VERSION = 7
 
     fun seed(context: Context) {
         val preferences = context.getPreferences()

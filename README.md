@@ -31,7 +31,8 @@ Telegram WS работает автономно (трафик Telegram не пр
 1. Установите APK, включите VPN (большая кнопка), примите системный запрос.
 2. Нажмите чип со стратегией под кнопкой и выберите:
    - **«FS: Fake TLS (SNI google)»** — универсальная (Discord, часть YouTube);
-   - **«ZG: Instagram/Facebook (fake ttl10)»** — Instagram/Facebook/Threads;
+   - **«ZG: YouTube/Instagram видео (multidisorder)»** — видео в YouTube и Instagram (Wi-Fi MTS);
+   - **«ZG: Instagram/Facebook (fake ttl10)»** — Instagram/Facebook/Threads (мобильные сети);
    - для полного перебора — «Подбор» (авто-тест 87 стратегий).
 3. **Telegram**: на главном экране включите **TG WS** (зелёная кнопка) → «Подключить прокси в Telegram» →
    в Telegram подтвердите прокси (127.0.0.1:1082, MTProto). Логи — по тапу на статус TG WS.
