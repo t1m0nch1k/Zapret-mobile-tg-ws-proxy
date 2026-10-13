@@ -165,6 +165,8 @@ class MainActivity : BaseActivity() {
         tgWsExt.initialize(this, getPreferences())
 
         historyUtils = HistoryUtils(this)
+        FlowsealPresets.seed(this)
+        DomainListUtils.syncLists(this)
 
         tgWsExt.initialize(this, getPreferences())
 

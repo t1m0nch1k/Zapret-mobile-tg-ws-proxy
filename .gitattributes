@@ -1,0 +1,4 @@
+# Keep shell scripts and asset lists with LF endings on all platforms
+*.sh text eol=lf
+app/src/main/assets/* text eol=lf
+tools/*.ps1 text eol=crlf

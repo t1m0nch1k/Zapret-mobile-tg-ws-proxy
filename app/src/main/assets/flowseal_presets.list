@@ -1,0 +1,29 @@
+FS: Fake TLS AUTO (SNI google)|-f-1 -t6 -n www.google.com -Qr -a1 -At,r,s -f-1 -t4 -s1+s -a1
+FS: Fake TLS (SNI google)|-f-1 -t6 -n www.google.com -Qr -a1
+FS: Simple Fake (ttl 8)|-f-1 -t8 -n www.google.com -s1+s -a1
+FS: Multisplit (SNI x5)|-s1:5+sm -d1 -s3+s -a1
+FS: Multidisorder (SNI)|-d1+s -d3+s -s6+s -d9+s -s12+s -d15+s -s20+s -a1
+FS: OOB in SNI|-o1+s -d3+s -a1
+FS: DISOOB + Fake|-q1+s -f-1 -t6 -n www.google.com -Qr -a1
+FS: TLS record split + split|-r1+s -s1:3+sm -a1
+FS: Fake + tlsrec + split (EXP)|-f-1 -t5 -n www.google.com -Qr -r1+s -s1:3+sm -a1
+FS: Drop SACK + disorder|-Y -d1+s -s3+s -a1
+FS: QUIC fake x6 + Fake TLS|-f-1 -t6 -n www.google.com -Qr -a1 -Ku -a6
+FS: TCP-only (no QUIC)|-U -f-1 -t6 -n www.google.com -Qr -a1
+FS: Discord media (alt ports)|-V 2053 -V 2083 -V 2087 -V 2096 -V 8443 -f-1 -t6 -n www.google.com -Qr -a1
+FS: Discord voice UDP (ports)|-V 19294-19344 -V 50000-50100 -Ku -a6
+FS: Only Discord/YouTube/Google (list)|-H":{list:flowseal}" -An -f-1 -t6 -n www.google.com -Qr -a1
+FS: Only YouTube (list) split|-H":{list:youtube}" -An -s1:3+sm -d1 -s3+s -a1
+ZG: YouTube видео (hostfake google/vimeo)|-H":{list:googlevideo}" -f-1 -t6 -n google.com -n vimeo.com -a1 -An
+ZG: YouTube сайт (multisplit)|-H":{list:youtube}" -s1 -s2+h -s2+s -s5+s -s-2+se -a1 -An
+ZG: YouTube QUIC (UDP fake x6)|-V 443 -Ku -a6 -An
+ZG: Discord (hostfake ozon.ru)|-H":{list:discord}" -f-1 -t6 -n ozon.ru -a1 -An
+ZG: Discord медиа/голос (UDP x4)|-V 19294-19344 -V 50000-50100 -Ku -a4 -An
+ZG: Telegram (hostfake ozon.ru)|-H":{list:telegram}" -f-1 -t6 -n ozon.ru -a1 -An
+ZG: Cloudflare (fake ozon.ru)|-H":{list:cloudflare}" -f-1 -t6 -n ozon.ru -a1 -An
+ZG: Всё через списки (fake ozon)|-H":{list:flowseal}" -f-1 -t6 -n ozon.ru -a1 -An
+ZG: Игры UDP (fake x4)|-V 1024-65535 -Ku -a4 -An
+ZG: Fake google SNI (лучший на мобильных)|-f-1 -t6 -n www.google.com -Qr -a1
+ZG: Fake ozon SNI (без -Q)|-f-1 -t6 -n ozon.ru -a1
+ZG: Instagram/Facebook (fake ttl10)|-f-1 -t10 -n www.google.com -Qr -a1
+ZG: Instagram/FB только (список)|-H":{list:social}" -f-1 -t10 -n www.google.com -Qr -a1 -An

@@ -28,14 +28,15 @@ android {
     namespace = "io.github.romanvht.byedpi"
     //noinspection GradleDependency
     compileSdk = 36
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
-        applicationId = "io.github.ewenloy.byedpixtg"
+        applicationId = "com.zapretmobile.app"
         minSdk = 21
         //noinspection OldTargetApi
         targetSdk = 34
-        versionCode = 20
-        versionName = "2.0.0"
+        versionCode = 30
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
