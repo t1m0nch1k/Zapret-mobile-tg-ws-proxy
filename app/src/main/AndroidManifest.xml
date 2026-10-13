@@ -136,6 +136,16 @@
         </service>
 
         <service
+            android:name=".zmsocks.ZmSocksBridgeService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Telegram WebSocket bridge (SOCKS5 to WSS)" />
+        </service>
+
+        <service
             android:name=".services.TestService"
             android:foregroundServiceType="dataSync"
             android:exported="false" />

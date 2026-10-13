@@ -19,6 +19,7 @@ import io.github.romanvht.byedpi.activities.TestActivity
 import io.github.romanvht.byedpi.data.Mode
 import io.github.romanvht.byedpi.data.PrivateDnsState
 import io.github.romanvht.byedpi.ewenloy.tgws.EwenloyTgWsServiceExtension
+import io.github.romanvht.byedpi.zmsocks.ZmSocksBridge
 import io.github.romanvht.byedpi.utility.*
 import androidx.core.net.toUri
 
@@ -32,6 +33,7 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
     private val statusUpdater = object : Runnable {
         override fun run() {
             updateTelegramRuntimeStatus()
+            updateSocksBridgeStatus()
             uiHandler.postDelayed(this, 1500)
         }
     }
@@ -105,6 +107,23 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
                 showSecretKeyDialog()
                 true
             }
+        findPreferenceNotNull<SwitchPreference>("zm_socks_bridge_enabled")
+            .setOnPreferenceChangeListener { _, _ ->
+                uiHandler.postDelayed({ updateProxyLinkSummary(); refreshSocksBridge() }, 100)
+                true
+            }
+
+        findPreferenceNotNull<EditTextPreference>("zm_socks_bridge_port")
+            .setOnPreferenceChangeListener { _, newValue ->
+                val value = newValue.toString().toIntOrNull()
+                if (value == null || value < ZmSocksBridge.MIN_PORT || value > ZmSocksBridge.MAX_PORT) {
+                    Toast.makeText(requireContext(), R.string.zm_bridge_port_invalid, Toast.LENGTH_SHORT).show()
+                    false
+                } else {
+                    uiHandler.postDelayed({ refreshSocksBridge() }, 100)
+                    true
+                }
+            }
 
         findPreferenceNotNull<Preference>("battery_optimization")
             .setOnPreferenceClickListener {
@@ -153,6 +172,8 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
         uiHandler.post(statusUpdater)
         updatePreferences()
         updateProxyLinkSummary()
+        updateSocksBridgeStatus()
+        refreshSocksBridgeIfEnabled()
     }
 
     override fun onPause() {
@@ -312,12 +333,39 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
 
     private fun updateProxyLinkSummary() {
         val prefs = sharedPreferences ?: return
+        val bridgeEnabled = ZmSocksBridge.isEnabled(prefs)
         val tgWsEnabled = prefs.getBoolean(EwenloyTgWsServiceExtension.EWENLOY_TG_WS_MODE_KEY, false)
         val linkPref = findPreferenceNotNull<Preference>("ewenloy_tg_open_proxy_link")
         linkPref.summary = getString(
-            if (tgWsEnabled) R.string.ewenloy_tg_open_proxy_summary_ws
-            else R.string.ewenloy_tg_open_proxy_summary
+            when {
+                bridgeEnabled -> R.string.ewenloy_tg_open_proxy_summary_bridge
+                tgWsEnabled -> R.string.ewenloy_tg_open_proxy_summary_ws
+                else -> R.string.ewenloy_tg_open_proxy_summary
+            }
         )
+    }
+
+    private fun refreshSocksBridge() {
+        val prefs = sharedPreferences ?: return
+        ZmSocksBridge.refresh(requireContext(), prefs)
+    }
+
+    /** Restart the bridge when the settings screen is opened and it is enabled. */
+    private fun refreshSocksBridgeIfEnabled() {
+        val prefs = sharedPreferences ?: return
+        if (ZmSocksBridge.isEnabled(prefs)) ZmSocksBridge.refresh(requireContext(), prefs)
+    }
+
+    private fun updateSocksBridgeStatus() {
+        val prefs = sharedPreferences ?: return
+        val statusPref = findPreferenceNotNull<Preference>("zm_socks_bridge_status")
+        val enabled = ZmSocksBridge.isEnabled(prefs)
+        val status = ZmSocksBridge.readStatus(prefs)
+        statusPref.summary = when {
+            !enabled -> getString(R.string.zm_bridge_status_stopped)
+            status.isBlank() -> getString(R.string.zm_bridge_status_starting)
+            else -> status
+        }
     }
 
     private fun updateTelegramRuntimeStatus() {
@@ -395,9 +443,14 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
 
     private fun openTelegramProxyLink() {
         val prefs = sharedPreferences ?: return
+        val bridgeEnabled = ZmSocksBridge.isEnabled(prefs)
         val tgWsEnabled = prefs.getBoolean(EwenloyTgWsServiceExtension.EWENLOY_TG_WS_MODE_KEY, false)
 
-        if (tgWsEnabled) {
+        if (bridgeEnabled) {
+            // SOCKS5 WS bridge: desktop-style tg-ws-proxy link
+            val port = ZmSocksBridge.port(prefs)
+            applyToTelegramPackages(requireContext(), "tg://socks?server=127.0.0.1&port=$port")
+        } else if (tgWsEnabled) {
             // MTProto WS Proxy — используем t.me/proxy?...&secret=
             val port = EwenloyTgWsServiceExtension.TG_WS_PORT
             val secretKey = prefs.getString(EwenloyTgWsServiceExtension.EWENLOY_TG_SECRET_KEY, "") ?: ""

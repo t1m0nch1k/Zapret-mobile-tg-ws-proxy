@@ -304,4 +304,18 @@
     <string name="notification_disconnect">Отключить</string>
     <string name="port_is_not_available">Порт %1$d занят, попробуйте другой</string>
     <string name="ewenloy_tg_open_proxy_summary_ws">Подключить Telegram к WS прокси на порту 1082</string>
+    <!-- SOCKS5 WebSocket bridge (vendored tg-ws-proxy) -->
+    <string name="zm_bridge_enabled_title">WS-мост Telegram (SOCKS5)</string>
+    <string name="zm_bridge_enabled_summary">Локальный SOCKS5-прокси, который переводит Telegram на WebSocket (как tg-ws-proxy на ПК). В Telegram: прокси SOCKS5 127.0.0.1:порт.</string>
+    <string name="zm_bridge_port_title">Порт WS-моста</string>
+    <string name="zm_bridge_port_summary">По умолчанию 1081. Не должен совпадать с портом ByeDPI (1080) и MTProto-модуля (1082).</string>
+    <string name="zm_bridge_port_invalid">Некорректный порт (1024–65535)</string>
+    <string name="zm_bridge_status_title">Состояние WS-моста</string>
+    <string name="zm_bridge_status_stopped">Выключен</string>
+    <string name="zm_bridge_status_starting">Запускается…</string>
+    <string name="zm_bridge_notification_title">WS-мост Telegram (SOCKS5)</string>
+    <string name="zm_bridge_notification">Слушает 127.0.0.1:%1$d · SOCKS5 → WebSocket</string>
+    <string name="zm_bridge_channel">WS-мост Telegram</string>
+    <string name="zm_bridge_channel_desc">Локальный SOCKS5-прокси с WebSocket-мостом для Telegram</string>
+    <string name="ewenloy_tg_open_proxy_summary_bridge">Открыть tg://socks ссылку с портом WS-моста</string>
 </resources>

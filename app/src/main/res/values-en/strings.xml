@@ -242,4 +242,17 @@
     <string name="file_picker_unavailable">The device has no system file picker. Grant the app file access to continue.</string>
     <string name="grant_access">Grant access</string>
     <string name="storage_access_not_granted">File access was not granted</string>
+    <string name="zm_bridge_enabled_title">Telegram WS bridge (SOCKS5)</string>
+    <string name="zm_bridge_enabled_summary">Local SOCKS5 proxy that tunnels Telegram over WebSocket (same as tg-ws-proxy on desktop). Point Telegram to SOCKS5 127.0.0.1:port.</string>
+    <string name="zm_bridge_port_title">Bridge port</string>
+    <string name="zm_bridge_port_summary">Default 1081. Must differ from the ByeDPI proxy port (1080) and the MTProto module port (1082).</string>
+    <string name="zm_bridge_port_invalid">Invalid port (1024-65535)</string>
+    <string name="zm_bridge_status_title">WS bridge status</string>
+    <string name="zm_bridge_status_stopped">Disabled</string>
+    <string name="zm_bridge_status_starting">Starting...</string>
+    <string name="zm_bridge_notification_title">Telegram WS bridge (SOCKS5)</string>
+    <string name="zm_bridge_notification">Listening on 127.0.0.1:%1$d · SOCKS5 to WebSocket</string>
+    <string name="zm_bridge_channel">Telegram WS bridge</string>
+    <string name="zm_bridge_channel_desc">Local SOCKS5 proxy with a Telegram WebSocket bridge</string>
+    <string name="ewenloy_tg_open_proxy_summary_bridge">Open the tg://socks link using the WS bridge port</string>
 </resources>

@@ -4,9 +4,11 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.chaquo.python")
 }
 
-val abis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+// Chaquopy (Python 3.12+) supports 64-bit ABIs only; keep the same two for the whole app.
+val abis = setOf("arm64-v8a", "x86_64")
 
 // Release signing: secrets come from CI environment variables or local.properties.
 // The keystore itself must NOT be committed to the repository.
@@ -32,11 +34,12 @@ android {
 
     defaultConfig {
         applicationId = "com.zapretmobile.app"
-        minSdk = 21
+        // Chaquopy requires minSdk >= 24 (Android 7.0).
+        minSdk = 24
         //noinspection OldTargetApi
         targetSdk = 34
-        versionCode = 32
-        versionName = "2.1.2"
+        versionCode = 33
+        versionName = "2.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -162,4 +165,14 @@ tasks.register<Exec>("runNdkBuild") {
 
 tasks.preBuild {
     dependsOn("runNdkBuild")
+}
+
+chaquopy {
+    defaultConfig {
+        version = "3.12"
+        buildPython("C:/Users/artem/AppData/Local/Programs/Python/Python312/python.exe")
+
+        // No pip requirements: the tg-ws-proxy core relies on the local pure-Python
+        // `cryptography` shim (pypi.org is unreachable from the build machine).
+    }
 }

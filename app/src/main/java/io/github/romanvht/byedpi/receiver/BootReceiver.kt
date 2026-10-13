@@ -11,6 +11,7 @@ import android.os.SystemClock
 import android.util.Log
 import io.github.romanvht.byedpi.data.Mode
 import io.github.romanvht.byedpi.ewenloy.tgws.EwenloyTgWsServiceExtension
+import io.github.romanvht.byedpi.zmsocks.ZmSocksBridge
 import io.github.romanvht.byedpi.services.ServiceManager
 import io.github.romanvht.byedpi.utility.getPreferences
 import io.github.romanvht.byedpi.utility.mode
@@ -55,6 +56,10 @@ class BootReceiver : BroadcastReceiver() {
                 Log.i(TAG, "Autostart TG WS ($reason)")
                 EwenloyTgWsServiceExtension().apply { initialize(context, preferences) }
                     .start(preferences)
+            }
+            if (preferences.getBoolean(ZmSocksBridge.PREF_ENABLED, false)) {
+                Log.i(TAG, "Autostart SOCKS5 WS bridge ($reason)")
+                ZmSocksBridge.start(context, preferences)
             }
 
             if (!preferences.getBoolean("autostart", false)) return

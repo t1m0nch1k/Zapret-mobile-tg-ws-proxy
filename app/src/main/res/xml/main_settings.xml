@@ -39,6 +39,28 @@
             android:summary="@string/tg_ws_secret_summary"
             android:dependency="ewenloy_tg_ws_mode_enabled" />
 
+        <SwitchPreference
+            android:key="zm_socks_bridge_enabled"
+            android:icon="@drawable/ic_telegram"
+            android:title="@string/zm_bridge_enabled_title"
+            android:summary="@string/zm_bridge_enabled_summary"
+            android:defaultValue="false" />
+
+        <EditTextPreference
+            android:key="zm_socks_bridge_port"
+            android:icon="@drawable/ic_pool"
+            android:title="@string/zm_bridge_port_title"
+            android:summary="@string/zm_bridge_port_summary"
+            android:inputType="number"
+            android:defaultValue="1081"
+            android:dependency="zm_socks_bridge_enabled" />
+
+        <Preference
+            android:key="zm_socks_bridge_status"
+            android:icon="@drawable/ic_info"
+            android:title="@string/zm_bridge_status_title"
+            android:summary="@string/zm_bridge_status_stopped" />
+
         <Preference
             android:key="ewenloy_tg_open_proxy_link"
             android:icon="@drawable/ic_telegram"
