@@ -1,3 +1,4 @@
+-d1+s -d3+s -s6+s -d9+s -s12+s -d15+s -s20+s -f-1 -t10 -n www.google.com -Qr -a1
 -f-1 -t6 -n www.google.com -Qr -a1 -At,r,s -f-1 -t4 -s1+s -a1
 -f-1 -t6 -n www.google.com -Qr -a1
 -f-1 -t8 -n www.google.com -s1+s -a1

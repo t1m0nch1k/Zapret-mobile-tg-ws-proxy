@@ -15,7 +15,7 @@ Telegram WS работает автономно (трафик Telegram не пр
 
 ## Что добавлено в этом форке (поверх ByeByeDPI-x-tg)
 
-- **29 пресетов «FS: …» и «ZG: …»** — стратегии из [Flowseal/zapret-discord-youtube](https://github.com/Flowseal/zapret-discord-youtube)
+- **30 пресетов «FS: …» и «ZG: …»** — стратегии из [Flowseal/zapret-discord-youtube](https://github.com/Flowseal/zapret-discord-youtube)
   и перенос пресета **zapret 2 (winws2) «Default v1 (game filter)»** на движок ciadpi:
   fake TLS с подменой SNI (`ozon.ru`, `google.com`, `vimeo.com`), мультисплит по SNI/Host, UDP-fake для QUIC и голосовых портов Discord,
   маршрутизация по спискам доменов, Instagram/Facebook (fake ttl10).
