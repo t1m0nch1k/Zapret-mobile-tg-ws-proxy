@@ -26,6 +26,7 @@ object UpdateChecker {
 
     private const val PREF_LAST_CHECK = "zm_update_last_check"
     private const val PREF_SKIPPED_TAG = "zm_update_skipped_tag"
+    private const val PREF_RESULT = "zm_update_result"
     private const val CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
 
     data class Release(
@@ -49,6 +50,13 @@ object UpdateChecker {
 
     fun skip(prefs: SharedPreferences, tag: String) =
         prefs.edit(commit = true) { putString(PREF_SKIPPED_TAG, tag) }
+
+    /** Последний результат проверки (показывается в настройках). */
+    fun readResult(prefs: SharedPreferences): String =
+        prefs.getString(PREF_RESULT, "") ?: ""
+
+    fun writeResult(prefs: SharedPreferences, value: String) =
+        prefs.edit(commit = true) { putString(PREF_RESULT, value) }
 
     /** Ответ сервера с кодом, отличным от 2xx. */
     class HttpStatusException(val code: Int) : IOException("HTTP $code")

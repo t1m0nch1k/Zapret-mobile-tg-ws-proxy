@@ -20,6 +20,9 @@ import io.github.romanvht.byedpi.R
 import io.github.romanvht.byedpi.activities.MainActivity
 import io.github.romanvht.byedpi.utility.getPreferences
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.Executors
 
 /** Диалоги, уведомление и установка обновления из GitHub Releases. */
@@ -38,6 +41,17 @@ object UpdateUi {
         executor.execute {
             val result = runCatching { UpdateChecker.fetchLatest() }
             result.onSuccess { UpdateChecker.markChecked(prefs) }
+            result.onSuccess { release ->
+                UpdateChecker.writeResult(
+                    prefs,
+                    if (UpdateChecker.isNewer(release.version)) {
+                        tstamp() + " доступно " + release.version
+                    } else {
+                        tstamp() + " последняя версия"
+                    }
+                )
+            }
+            result.onFailure { UpdateChecker.writeResult(prefs, tstamp() + " ошибка: " + (it.message ?: "")) }
             main.post {
                 result.onSuccess { release ->
                     if (UpdateChecker.isNewer(release.version)) {
@@ -101,6 +115,9 @@ object UpdateUi {
         }
     }
 
+
+    private fun tstamp(): String =
+        SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
     private fun notifyUpdate(context: Context, release: UpdateChecker.Release) {
         main.post {
             runCatching {

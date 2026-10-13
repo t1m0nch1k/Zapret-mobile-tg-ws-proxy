@@ -20,6 +20,7 @@ import io.github.romanvht.byedpi.data.Mode
 import io.github.romanvht.byedpi.data.PrivateDnsState
 import io.github.romanvht.byedpi.ewenloy.tgws.EwenloyTgWsServiceExtension
 import io.github.romanvht.byedpi.zmsocks.ZmSocksBridge
+import io.github.romanvht.byedpi.zmupdate.UpdateChecker
 import io.github.romanvht.byedpi.zmupdate.UpdateUi
 import io.github.romanvht.byedpi.zmwidget.ZmWidgetProvider
 import io.github.romanvht.byedpi.utility.*
@@ -36,6 +37,7 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
         override fun run() {
             updateTelegramRuntimeStatus()
             updateSocksBridgeStatus()
+            updateZmUpdateSummary()
             uiHandler.postDelayed(this, 1500)
         }
     }
@@ -371,6 +373,14 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
     private fun refreshSocksBridgeIfEnabled() {
         val prefs = sharedPreferences ?: return
         if (ZmSocksBridge.isEnabled(prefs)) ZmSocksBridge.refresh(requireContext(), prefs)
+    }
+
+    private fun updateZmUpdateSummary() {
+        val prefs = sharedPreferences ?: return
+        val pref = findPreferenceNotNull<Preference>("zm_update")
+        val base = getString(R.string.zm_update_summary, BuildConfig.VERSION_NAME)
+        val result = UpdateChecker.readResult(prefs)
+        pref.summary = if (result.isBlank()) base else base + "\n" + result
     }
 
     private fun updateSocksBridgeStatus() {
