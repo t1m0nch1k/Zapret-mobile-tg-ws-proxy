@@ -1,11 +1,23 @@
-"""Pure-Python AES (FIPS-197) and an AES-CTR keystream.
+"""AES-CTR for the vendored tg-ws-proxy core.
 
-Only what the vendored tg-ws-proxy core needs: AES-ECB block encryption for
-128/192/256-bit keys, and a 128-bit big-endian counter stream compatible with
-`cryptography.hazmat.primitives.ciphers` AES-CTR (verified byte-for-byte
-against cryptography 49 on the build machine).
+Two backends, byte-for-byte compatible with each other and with
+`cryptography.hazmat.primitives.ciphers` AES-CTR:
+
+* native - OpenSSL's AES-CTR through ctypes (the libcrypto that ships with
+  Chaquopy's Python runtime on Android; a local libcrypto on the test machine).
+* pure   - self-contained Python AES (FIPS-197) used when no libcrypto loads.
+
+Backend selection can be overridden for diagnostics:
+  ZM_AES_BACKEND=pure   force the pure-Python path
+  ZM_LIBCRYPTO=<path>   load a specific libcrypto
 """
+from __future__ import annotations
 
+import ctypes
+import os
+import time
+
+# ---------------------------------------------------------------- pure Python
 
 def _xtime(a: int) -> int:
     a <<= 1
@@ -99,8 +111,8 @@ class _AES:
         return bytes([s[i] ^ rk[i] for i in range(16)])
 
 
-class CTRStream:
-    """`cryptography`-compatible AES-CTR encryptor/decryptor (update/finalize)."""
+class _PureCTRStream:
+    """Pure-Python AES-CTR encryptor/decryptor (update/finalize)."""
 
     __slots__ = ("_aes", "_counter", "_buffer")
 
@@ -136,3 +148,133 @@ class CTRStream:
 
     def finalize(self) -> bytes:
         return b""
+
+# ------------------------------------------------------------- native OpenSSL
+
+_CANDIDATE_LIBS = (
+    # Android / Chaquopy: bundled with the Python runtime.
+    "libcrypto_python.so",
+    "libcrypto_chaquopy.so",
+    "libcrypto.so.3",
+    "libcrypto.so",
+    # Desktop fallbacks (used by the offline cross-check on the build machine).
+    "libcrypto-3-x64.dll",
+    "libcrypto-3.dll",
+    "libcrypto.dll",
+)
+
+_EVP_NAMES = {16: "EVP_aes_128_ctr", 24: "EVP_aes_192_ctr", 32: "EVP_aes_256_ctr"}
+
+
+def _load_libcrypto():
+    if os.environ.get("ZM_AES_BACKEND") == "pure":
+        return None, None
+
+    override = os.environ.get("ZM_LIBCRYPTO")
+    candidates = ([override] if override else []) + list(_CANDIDATE_LIBS)
+    for name in candidates:
+        if not name:
+            continue
+        try:
+            lib = ctypes.CDLL(name)
+        except OSError:
+            continue
+        try:
+            lib.EVP_CIPHER_CTX_new.restype = ctypes.c_void_p
+            lib.EVP_CIPHER_CTX_new.argtypes = ()
+            lib.EVP_CIPHER_CTX_free.restype = None
+            lib.EVP_CIPHER_CTX_free.argtypes = (ctypes.c_void_p,)
+            for sym in _EVP_NAMES.values():
+                fn = getattr(lib, sym)
+                fn.restype = ctypes.c_void_p
+                fn.argtypes = ()
+            lib.EVP_EncryptInit_ex.restype = ctypes.c_int
+            lib.EVP_EncryptInit_ex.argtypes = (
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_char_p, ctypes.c_char_p)
+            lib.EVP_EncryptUpdate.restype = ctypes.c_int
+            lib.EVP_EncryptUpdate.argtypes = (
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(ctypes.c_int),
+                ctypes.c_void_p, ctypes.c_int)
+        except AttributeError:
+            continue
+        return lib, name
+    return None, None
+
+
+_LIBCRYPTO, _LIBCRYPTO_NAME = _load_libcrypto()
+
+
+class _NativeCTRStream:
+    """AES-CTR through OpenSSL EVP; keeps the keystream position across calls."""
+
+    __slots__ = ("_lib", "_ctx")
+
+    def __init__(self, lib, key: bytes, nonce: bytes):
+        self._lib = lib
+        ctx = lib.EVP_CIPHER_CTX_new()
+        if not ctx:
+            raise MemoryError("EVP_CIPHER_CTX_new() failed")
+        cipher = getattr(lib, _EVP_NAMES[len(key)])()
+        if not cipher:
+            lib.EVP_CIPHER_CTX_free(ctx)
+            raise RuntimeError("cipher lookup failed")
+        if lib.EVP_EncryptInit_ex(ctx, cipher, None, bytes(key), bytes(nonce)) != 1:
+            lib.EVP_CIPHER_CTX_free(ctx)
+            raise RuntimeError("EVP_EncryptInit_ex failed")
+        self._ctx = ctx
+
+    def update(self, data: bytes) -> bytes:
+        if not data:
+            return b""
+        src = ctypes.create_string_buffer(bytes(data))
+        dst = ctypes.create_string_buffer(len(data))
+        out_len = ctypes.c_int(0)
+        rc = self._lib.EVP_EncryptUpdate(
+            self._ctx,
+            ctypes.cast(dst, ctypes.c_void_p),
+            ctypes.byref(out_len),
+            ctypes.cast(src, ctypes.c_void_p),
+            len(data),
+        )
+        if rc != 1:
+            raise RuntimeError("EVP_EncryptUpdate failed")
+        return dst.raw[:out_len.value]
+
+    def finalize(self) -> bytes:
+        return b""
+
+    def __del__(self):
+        ctx = getattr(self, "_ctx", None)
+        if ctx:
+            try:
+                self._lib.EVP_CIPHER_CTX_free(ctx)
+            except Exception:
+                pass
+            self._ctx = None
+
+
+class CTRStream:
+    """Factory: native OpenSSL stream when available, pure Python otherwise."""
+
+    def __new__(cls, key: bytes, nonce: bytes):
+        if _LIBCRYPTO is not None:
+            try:
+                return _NativeCTRStream(_LIBCRYPTO, key, nonce)
+            except Exception:
+                pass
+        return _PureCTRStream(key, nonce)
+
+
+def backend() -> str:
+    return ("libcrypto:" + _LIBCRYPTO_NAME) if _LIBCRYPTO is not None else "pure-python"
+
+
+def benchmark(nbytes: int = 1 << 20) -> float:
+    """CTR throughput in bytes per second (diagnostics helper)."""
+    stream = CTRStream(b"\x11" * 32, b"\x22" * 16)
+    payload = b"\x00" * nbytes
+    start = time.perf_counter()
+    stream.update(payload)
+    elapsed = time.perf_counter() - start
+    return nbytes / elapsed if elapsed > 0 else 0.0

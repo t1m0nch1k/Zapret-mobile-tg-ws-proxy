@@ -59,6 +59,16 @@ def _configure_logging() -> None:
         root.setLevel(logging.INFO)
 
 
+def _log_aes_backend() -> None:
+    """Log which AES-CTR backend the shim picked (native OpenSSL vs pure Python)."""
+    logger = logging.getLogger("zm.runner")
+    try:
+        from cryptography.hazmat.primitives.ciphers import _stream as aes  # noqa: WPS433
+        logger.info("AES backend: %s", aes.backend())
+        logger.info("AES speed: %.1f MB/s", aes.benchmark(1 << 20) / 1024.0 / 1024.0)
+    except Exception:
+        logger.exception("AES backend probe failed")
+
 def start(port: int = DEFAULT_PORT, dc_ips: list | None = None,
           host: str = DEFAULT_HOST) -> str:
     """Start the SOCKS5 -> WebSocket bridge. Returns a short status string."""
@@ -69,6 +79,7 @@ def start(port: int = DEFAULT_PORT, dc_ips: list | None = None,
             return "already running on %s:%d" % (_state["host"], _state["port"])
 
         _configure_logging()
+        _log_aes_backend()
         from proxy import tg_ws_proxy as core  # noqa: WPS433
         parse_dc_ip_list, _run = core.parse_dc_ip_list, core._run
 
