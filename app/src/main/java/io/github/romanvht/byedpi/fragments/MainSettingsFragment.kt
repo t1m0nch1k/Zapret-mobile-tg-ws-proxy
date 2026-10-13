@@ -20,6 +20,8 @@ import io.github.romanvht.byedpi.data.Mode
 import io.github.romanvht.byedpi.data.PrivateDnsState
 import io.github.romanvht.byedpi.ewenloy.tgws.EwenloyTgWsServiceExtension
 import io.github.romanvht.byedpi.zmsocks.ZmSocksBridge
+import io.github.romanvht.byedpi.zmupdate.UpdateUi
+import io.github.romanvht.byedpi.zmwidget.ZmWidgetProvider
 import io.github.romanvht.byedpi.utility.*
 import androidx.core.net.toUri
 
@@ -161,6 +163,21 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
             }
 
         findPreferenceNotNull<Preference>("version").summary = BuildConfig.VERSION_NAME
+        findPreferenceNotNull<Preference>("zm_widget_pin")
+            .setOnPreferenceClickListener {
+                if (!ZmWidgetProvider.requestPin(requireContext())) {
+                    Toast.makeText(requireContext(), R.string.zm_widget_pin_unsupported, Toast.LENGTH_LONG).show()
+                }
+                true
+            }
+
+        findPreferenceNotNull<Preference>("zm_update").apply {
+            summary = getString(R.string.zm_update_summary, BuildConfig.VERSION_NAME)
+            setOnPreferenceClickListener {
+                UpdateUi.checkManually(requireContext())
+                true
+            }
+        }
         findPreferenceNotNull<Preference>("byedpi_version").summary = "0.17.3 (ba53229)"
 
         updatePreferences()

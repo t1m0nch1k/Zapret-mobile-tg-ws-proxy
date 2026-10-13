@@ -32,6 +32,8 @@ import io.github.romanvht.byedpi.ewenloy.tgws.TgWsProxyService
 import io.github.romanvht.byedpi.services.ServiceManager
 import io.github.romanvht.byedpi.services.TestService
 import io.github.romanvht.byedpi.services.appStatus
+import io.github.romanvht.byedpi.zmupdate.UpdateUi
+import io.github.romanvht.byedpi.zmwidget.ZmWidgetProvider
 import io.github.romanvht.byedpi.utility.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -154,6 +156,13 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra(UpdateUi.EXTRA_SHOW_UPDATE, false)) {
+            UpdateUi.showLatestDialog(this)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ServiceManager.refresh(this)
@@ -169,6 +178,12 @@ class MainActivity : BaseActivity() {
         DomainListUtils.syncLists(this)
 
         tgWsExt.initialize(this, getPreferences())
+
+        UpdateUi.maybeAutoCheck(this)
+        ZmWidgetProvider.updateAll(this)
+        if (intent?.getBooleanExtra(UpdateUi.EXTRA_SHOW_UPDATE, false) == true) {
+            UpdateUi.showLatestDialog(this)
+        }
 
         val intentFilter = IntentFilter().apply {
             addAction(STARTED_BROADCAST)

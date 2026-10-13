@@ -1,17 +1,19 @@
-# Zapret Mobile 2.1 — Android: обход DPI + ускорение Telegram в одном приложении
+# Zapret Mobile 2.3 — Android: обход DPI + Telegram через WS/SOCKS5 в одном приложении
 
 Android-приложение для **локального** обхода DPI-блокировок (без root и без внешних серверов).
 Собрано на базе [ByeByeDPI-x-tg](https://github.com/EwenLoy/ByeByeDPI-x-tg) →
 [ByeByeDPI](https://github.com/romanvht/ByeByeDPI) → [ByeDPI](https://github.com/hufrea/byedpi) + [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel).
 
-Внутри **два независимых прокси**:
+Внутри — **обход DPI + два способа ускорить Telegram** (SOCKS5-мост и MTProto-модуль):
 
 | Компонент | Порт | Назначение |
 |---|---|---|
 | **ByeDPI** (ciadpi) | `127.0.0.1:1080` | весь трафик через VPN: YouTube, Discord, Instagram и т.д. |
-| **Telegram WS** (Rust-ядро `libtgwsproxy.so`) | `127.0.0.1:1082` | только Telegram: MTProto → WebSocket-шлюзы Telegram, при недоступности WS — прямое TCP |
+| **Telegram WS-мост (SOCKS5)** — tg-ws-proxy (Python через Chaquopy) | `127.0.0.1:1081` | только Telegram по схеме «как на ПК»: Telegram → SOCKS5 → WSS-шлюзы Telegram; AES ускорен нативным OpenSSL |
+| **Telegram WS (MTProto)** — Rust-ядро `libtgwsproxy.so` | `127.0.0.1:1082` | альтернативный режим: MTProto → WebSocket-шлюзы, при недоступности WS — прямое TCP |
 
-Telegram WS работает автономно (трафик Telegram не проходит через ByeDPI).
+Оба режима работают автономно (трафик Telegram не идёт через ByeDPI), включаются тумблерами в настройках;
+в Telegram можно держать оба прокси и разрешить автопереключение.
 
 ## Что добавлено в этом форке (поверх ByeByeDPI-x-tg)
 
@@ -25,6 +27,15 @@ Telegram WS работает автономно (трафик Telegram не пр
   исправлен порядок `-An` в маршрутизированных пресетах.
 - `tools/windows-fix-symlinks.ps1` (обязательный шаг сборки на Windows), `tools/validate-presets.sh`
   (проверка пресетов парсером ciadpi), `docs/` — таблицы переноса пресетов.
+- **SOCKS5-режим Telegram внутри приложения**: встроен эталонный tg-ws-proxy (MIT, Flowseal) на Chaquopy —
+  Telegram подключается к `127.0.0.1:1081` как к обычному SOCKS5-прокси (тумблер и порт — в настройках).
+  Чтобы собирать приложение без доступа к PyPI, зависимость `cryptography` заменена локальным шимом,
+  а сам AES ускорен нативным OpenSSL через ctypes: ~86 МБ/с на телефоне и 479 МБ/с на стенде
+  (было ~0.25 МБ/с на чистом Python) — отправка файлов в Telegram больше не упирается в шифрование
+  (файлы 40 и 100 МБ уходят на скорости сети).
+- **Автообновление из GitHub Releases**: раз в сутки (и по кнопке «Настройки → Обновления») приложение
+  проверяет релизы этого репозитория, показывает список изменений и умеет скачать APK и запустить установку.
+- **Виджет рабочего стола**: статус и кнопка включения/выключения обхода в один тап (+ переход в настройки).
 
 ## Быстрый старт
 
@@ -34,9 +45,12 @@ Telegram WS работает автономно (трафик Telegram не пр
    - **«ZG: YouTube/Instagram видео (multidisorder)»** — видео в YouTube и Instagram (Wi-Fi MTS);
    - **«ZG: Instagram/Facebook (fake ttl10)»** — Instagram/Facebook/Threads (мобильные сети);
    - для полного перебора — «Подбор» (авто-тест 87 стратегий).
-3. **Telegram**: на главном экране включите **TG WS** (зелёная кнопка) → «Подключить прокси в Telegram» →
-   в Telegram подтвердите прокси (127.0.0.1:1082, MTProto). Логи — по тапу на статус TG WS.
-4. Настройки → Telegram: тумблер «Ускорить Telegram через WS» (включается/выключается без переподключения VPN).
+3. **Telegram (SOCKS5, как на ПК)**: Настройки → Telegram → включите **«WS-мост Telegram (SOCKS5)»** →
+   «Подключить прокси в Telegram» и подтвердите в Telegram прокси SOCKS5 `127.0.0.1:1081`.
+   Альтернативный режим — MTProto-модуль: на главном экране **TG WS** → прокси `127.0.0.1:1082`.
+   Статус моста виден в настройках, логи — в logcat (`python.stderr`).
+4. Прочее: «Настройки → Обновления» — проверка новых версий с GitHub; на рабочий стол можно добавить
+   виджет Zapret Mobile (включение/выключение и статус).
 
 ## Сборка (Windows)
 

@@ -318,4 +318,33 @@
     <string name="zm_bridge_channel">WS-мост Telegram</string>
     <string name="zm_bridge_channel_desc">Локальный SOCKS5-прокси с WebSocket-мостом для Telegram</string>
     <string name="ewenloy_tg_open_proxy_summary_bridge">Открыть tg://socks ссылку с портом WS-моста</string>
+    <!-- Обновления из GitHub Releases -->
+    <string name="zm_update_title">Обновления</string>
+    <string name="zm_update_summary">Установлено: %1$s. Проверка обновлений из GitHub.</string>
+    <string name="zm_update_checking">Проверяю обновления…</string>
+    <string name="zm_update_latest">Обновлений нет — установлена последняя версия (%1$s)</string>
+    <string name="zm_update_error">Не удалось проверить обновления: %1$s</string>
+    <string name="zm_update_available_title">Доступно обновление %1$s</string>
+    <string name="zm_update_available_text">Нажмите, чтобы посмотреть и установить</string>
+    <string name="zm_update_dialog_header">Установлено: %1$s\nДоступно: %2$s</string>
+    <string name="zm_update_download">Скачать и установить</string>
+    <string name="zm_update_open_page">Открыть на GitHub</string>
+    <string name="zm_update_later">Позже</string>
+    <string name="zm_update_downloading">Скачиваю APK…</string>
+    <string name="zm_update_error_install">Не удалось запустить установщик — откройте страницу релиза</string>
+    <string name="zm_update_channel">Обновления приложения</string>
+    <!-- Виджет -->
+    <string name="zm_widget_title">Zapret Mobile</string>
+    <string name="zm_widget_desc">Включение и выключение обхода DPI в один тап</string>
+    <string name="zm_widget_on">Подключено</string>
+    <string name="zm_widget_off">Отключено</string>
+    <string name="zm_widget_enable">Включить</string>
+    <string name="zm_widget_disable">Выключить</string>
+    <string name="zm_widget_settings">Настройки</string>
+    <string name="zm_widget_mode">Режим: %1$s</string>
+    <string name="zm_widget_mode_vpn">VPN</string>
+    <string name="zm_widget_mode_proxy">Прокси (без VPN)</string>
+    <string name="zm_widget_pin_title">Виджет на рабочий стол</string>
+    <string name="zm_widget_pin_summary">Добавить виджет Zapret Mobile (включение и статус одним тапом)</string>
+    <string name="zm_widget_pin_unsupported">Лаунчер не поддерживает добавление виджета из приложения — добавьте его вручную через меню «Виджеты»</string>
 </resources>

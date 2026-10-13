@@ -275,6 +275,16 @@
         </Preference>
 
         <Preference
+            android:key="zm_widget_pin"
+            android:icon="@drawable/ic_info"
+            android:title="@string/zm_widget_pin_title"
+            android:summary="@string/zm_widget_pin_summary" />
+        <Preference
+            android:key="zm_update"
+            android:icon="@drawable/ic_info"
+            android:title="@string/zm_update_title"
+            android:summary="" />
+        <Preference
             android:key="version"
             android:icon="@drawable/ic_info"
             android:title="@string/version"
