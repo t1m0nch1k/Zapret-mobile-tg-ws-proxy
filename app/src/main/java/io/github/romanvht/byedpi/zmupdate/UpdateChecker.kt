@@ -3,6 +3,7 @@ package io.github.romanvht.byedpi.zmupdate
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import io.github.romanvht.byedpi.BuildConfig
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -21,8 +22,8 @@ import java.net.URL
 object UpdateChecker {
     const val REPO_OWNER = "t1m0nch1k"
     const val REPO_NAME = "Zapret-mobile-tg-ws-proxy"
-    private const val API_LATEST =
-        "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
+    private const val API_RELEASES =
+        "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases?per_page=20"
 
     private const val PREF_LAST_CHECK = "zm_update_last_check"
     private const val PREF_SKIPPED_TAG = "zm_update_skipped_tag"
@@ -61,37 +62,54 @@ object UpdateChecker {
     /** Ответ сервера с кодом, отличным от 2xx. */
     class HttpStatusException(val code: Int) : IOException("HTTP $code")
 
-    /** Синхронный запрос к GitHub; бросает IOException при неудаче. */
+    /**
+     * Новейший «настоящий» релиз.
+     *
+     * Берём список релизов (а не /latest), потому что в репозитории могут появляться
+     * служебные сборки (например, CI с суффиксом «-build»), которые несут
+     * неподписанные APK. Такие релизы и ассеты «unsigned» пропускаем.
+     */
     fun fetchLatest(): Release {
         val body = try {
-            httpGet(API_LATEST)
+            httpGet(API_RELEASES)
         } catch (e: HttpStatusException) {
             if (e.code == 404) throw IOException("в репозитории пока нет релизов") else throw e
         }
-        val json = JSONObject(body)
-        val tag = json.optString("tag_name").ifBlank { throw IOException("Пустой tag_name") }
-        val notes = json.optString("body", "")
-        val page = json.optString(
-            "html_url", "https://github.com/$REPO_OWNER/$REPO_NAME/releases"
-        )
-        var apkUrl: String? = null
-        val assets = json.optJSONArray("assets")
-        if (assets != null) {
-            for (i in 0 until assets.length()) {
-                val asset = assets.getJSONObject(i)
-                val name = asset.optString("name", "")
-                if (!name.endsWith(".apk", ignoreCase = true)) continue
-                val url = asset.optString("browser_download_url", "")
-                if (url.isBlank()) continue
-                val arm64 = name.contains("arm64", ignoreCase = true)
-                if (apkUrl == null || arm64) apkUrl = url
-                if (arm64) break
+        val releases = JSONArray(body)
+        for (i in 0 until releases.length()) {
+            val json = releases.getJSONObject(i)
+            val tag = json.optString("tag_name")
+            if (tag.isBlank()) continue
+            if (tag.contains("-build", ignoreCase = true)) continue
+            if (json.optBoolean("draft", false)) continue
+            val notes = json.optString("body", "")
+            val page = json.optString(
+                "html_url", "https://github.com/$REPO_OWNER/$REPO_NAME/releases"
+            )
+            var apkUrl: String? = null
+            val assets = json.optJSONArray("assets")
+            if (assets != null) {
+                for (a in 0 until assets.length()) {
+                    val asset = assets.getJSONObject(a)
+                    val name = asset.optString("name", "")
+                    if (!name.endsWith(".apk", ignoreCase = true)) continue
+                    if (name.contains("unsigned", ignoreCase = true)) continue
+                    val url = asset.optString("browser_download_url", "")
+                    if (url.isBlank()) continue
+                    if (apkUrl == null) apkUrl = url
+                    if (name.contains("arm64", ignoreCase = true)) apkUrl = url
+                    if (name.contains("zapret-mobile", ignoreCase = true)) {
+                        apkUrl = url
+                        break
+                    }
+                }
             }
+            return Release(
+                tag = tag, version = tag.removePrefix("v"), notes = notes,
+                pageUrl = page, apkUrl = apkUrl,
+            )
         }
-        return Release(
-            tag = tag, version = tag.removePrefix("v"), notes = notes,
-            pageUrl = page, apkUrl = apkUrl,
-        )
+        throw IOException("в репозитории пока нет релизов")
     }
 
     fun isNewer(remote: String, local: String = currentVersion()): Boolean {
